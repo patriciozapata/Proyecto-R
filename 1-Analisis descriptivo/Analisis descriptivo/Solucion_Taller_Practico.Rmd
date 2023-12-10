@@ -1,0 +1,177 @@
+---
+title: "Solución Taller Práctico"
+author: "Herramientas Computacionales"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(DT)
+```
+
+## Taller Práctico 
+
+Antes de partir, se importa la base de datos:
+```{r, eval = FALSE, warning = FALSE}
+library(tidyverse)
+data <- readxl::read_excel("PlayStore.xlsx")
+```
+
+```{r, echo = FALSE, warning = FALSE}
+data <- readxl::read_excel("PlayStore.xlsx")
+```
+
+### Pregunta 1
+Use las herramientas de dplyr para ordenar la base de datos de acuerdo a la variable `TAMAÑO`. Luego, seleccione sólo las que son de pago, y con ello genere una variable `GANANCIAS` que estima el dinero recibido por la empresa, calculado como el precio por el número de descargas aproximado (5000 aprox. = 5000) y realice un promedio de ganancias para cada categoría. Comente.
+
+```{r, warning = FALSE, message=FALSE}
+data2 <- data %>% 
+  dplyr::arrange(`Tamaño(M)`) %>% 
+  dplyr::filter(Tipo == "Pago") %>% 
+  dplyr::mutate(Descargas = gsub("aprox.", "", Descargas),
+                Descargas = gsub(",", "", Descargas),
+                Ganancias = as.numeric(Descargas)*Precio)
+
+Ganancias_Promedio <- data2 %>% 
+  dplyr::group_by(`Categoría`) %>% 
+  dplyr::summarise(Ganancias = round(mean(Ganancias, na.rm = TRUE), 0))
+
+DT::datatable(Ganancias_Promedio)
+```
+
+> Se observan fuertes diferencias en el promedio de ganancias para cada categoría. Estos promedios varían entre 99 y 3.339.679 unidades.
+
+
+### Pregunta 2
+Considere nuevamente todos los tipos de adquisión. Entregue un gráfico que represente la distribución de la `VALORACIÓN` para cada categoría, y otro gráfico que represente la distribución por TIPO de adquisición (pagada o gratis). Comente.
+
+```{r, warning = FALSE}
+ggplot(data = data, aes(x = `Valoración`)) +
+  geom_histogram(bins = 50, alpha = 0.8, color = "white", fill = "turquoise") +
+  xlab("Valoración") +
+  ylab("Frecuencias") +
+  ggtitle("Distribución de Valoración") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(data = data, aes(x = `Categoría`, y = `Valoración`, fill = `Categoría`)) +
+  geom_boxplot() +
+  coord_flip()+
+  theme(legend.position="none")
+
+
+ggplot(data = data, aes(y = `Valoración`, x = factor(Tipo),  fill = factor(Tipo)))+
+  geom_boxplot() + 
+  xlab("Tipo de adquisición")
+
+### Para quitar los Outliers:
+ggplot(data = data, aes(y = `Valoración`, fill = factor(Tipo))) +
+  geom_boxplot(outlier.shape = NA)  
+
+```
+
+> Se observan diferencias en la distribución de la valoración para las distintas categorías. La mayoría tiene datos atípicos correspondiente a baja valoración. La categoría más heterogénea en su valoración es DATOS, y la más homogénea es EDUCACIÓN.
+
+> La forma de la distribución de la valoración para el tipo de aplicación es similar en pago y gratis, sin embargo, las aplicaciones pagadas, tienden a tener mayor valoración que las de no pago.
+
+### Pregunta 3
+Realice un gráfico que ilustre la `CLASIFICACIÓN` de las aplicaciones. Considere un orden correcto para las categorías. Comente.  
+
+
+El orden natural debiese ser:
+```{r, warning = FALSE}
+Orden <- c("Todo público", "Mayores de 10 años", "Adolescentes",
+           "Mayores de 17 años", "Sólo adultos", "Sin clasificación")
+```
+
+Conla función `factor()` se ingresan los nuevos niveles de la variable.
+```{r, warning = FALSE}
+data <- data %>% 
+  dplyr::mutate(Clasificacion2 = factor(`Clasificación`, levels = Orden))
+
+ggplot(data, aes(x = Clasificacion2, fill = Clasificacion2)) +
+  geom_bar() +
+  coord_flip() +
+  theme(legend.position = "none") +
+  ylab("Cuenta") +
+  xlab("Clasificación") +
+  ggtitle("Distribución de Clasificación") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+> La mayoría de las aplicaciones de este conjunto de datos correponde a clasificación Todo Público.
+
+### Pregunta 4 
+Genere una función que, al recibir un nivel de la variable `CATEGORÍA`, reporte un gráfico sobre la `VALORACIÓN` y un resumen numérico del `TAMAÑO` para ese nivel. Pruebe su función para el nivel `SOCIAL` y comente.  
+
+```{r, warning = FALSE}
+Analisis_Categoria <- function(categoria) {
+  datos <- data %>% 
+    dplyr::filter(`Categoría` == categoria)
+  
+  g1 <- ggplot(data = datos, aes(x = `Valoración`)) +
+  geom_histogram(bins = 30, color = "white", fill = "turquoise") +
+  xlab("Valoración") + ylab("Frecuencias") +
+  ggtitle(paste("Distribución de Valoración de la Categoría", categoria)) +
+  theme(plot.title = element_text(hjust = 0.5))
+  
+  tabla <- as.data.frame(round(as.matrix(summary(data$`Tamaño(M)`)), 2))
+  names(tabla) <- "Valor"
+  print(g1)
+  return(tabla)
+}
+
+knitr::kable(Analisis_Categoria("SOCIAL"))
+```  
+
+> La distribución de la valoración para nivel Social tiene forma asimétrica negativa. Es decir, los datos se concentran en valores altos de valoración
+
+> El tamaño para el nievel social tiene promedio 9.10, sin embargo, los valores fluctúan entre 1.1 y 881.0
+
+### Pregunta 5
+Sólo hay 2 apps que indican explícitamente “Sólo adultos”. No obstante, en los nombres de las aplicaciones se encuentra varias veces la palabra “adult” o “Adult”. Genere un buscador que reciba cierta palabra y retorne una tabla (en porcentaje) de la `CLASIFICACIÓN` de dichas apps que contenga esa palabra. Pruebe su buscador con la palabra “adult” y comente los resultados.  
+
+```{r, warning = FALSE}
+buscador_palabra <- function(palabra) {
+  indice <- grep(palabra, data$App)
+  tabla <- data %>% 
+    dplyr::slice(indice) %>% 
+    dplyr::count(Clasificacion2) %>% 
+    dplyr::rename(Clasificacion = Clasificacion2,
+                  Numero = n)
+  return(tabla)
+}
+
+knitr::kable(buscador_palabra("adult"))
+```
+
+> Solo existe una app cuya CLASIFICACIÓN es "adult".
+
+### Pregunta 6
+Calcule el promedio y desviación estándar de la variable `VALORACIÓN. Si se utiliza el supuesto de normalidad, simule 9000 datos de una distribución normal cuyos parámetros sean justamente los calculados de los datos reales y realice ambos gráficos. ¿Se parece la simulación a los datos reales? Concluya. (Utilice la función rnorm() para generar muestras con distribución normal).  
+
+```{r, warning = FALSE}
+promedio <- mean(data$Valoración, na.rm = TRUE)
+desviacion <- sd(data$Valoración, na.rm = TRUE)
+
+datos <- data.frame(Simulacion = rnorm(9000, promedio, desviacion))
+ggplot(data = datos, aes(x = Simulacion)) +
+  geom_histogram(bins = 50, color = "white", fill = "turquoise") +
+  xlab("Valoracion Normal") + ylab("Distribucion") +
+  ggtitle("Distribución de Valoración Normal") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(data = data, aes(x = `Valoración`)) +
+  geom_histogram(bins = 50, color = "white", fill = "turquoise") +
+  xlab("Valoracion") + ylab("Distribucion") +
+  ggtitle("Distribución de Valoración") +
+  theme(plot.title = element_text(hjust = 0.5))
+```  
+
+> La distribución de la valoración no se parece a la de la distribución normal. La distribución de la variable valoración no es simétrica y se concentra en valores altos de valoración.
+

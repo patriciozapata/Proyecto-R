@@ -1,0 +1,260 @@
+---
+title: "Ayudantía 3  <br> Análisis de Regresión"
+author: "Nombre"
+date: "29 Agosto, 2020"
+output:
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: vignette
+    math: katex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(nortest) 
+```
+
+
+#### Comenzaremos cargando las librerías necesarias:
+
+
+
+## Parte 1: Regresión Lineal Simple
+
+Consideremos los datos provistos en una encuesta donde se pregunto cuantos ml de vino bebió en el almuerzo y la duración de la siesta que tomó después. Los datos a utilizar:    `siesta.csv`
+
+```{r data, echo=TRUE, message=F}
+siesta <- readr::read_csv("siesta.csv")
+head(siesta,4)
+```
+
+#### Actividades:
+
+1. realice un gráfico de las variables:
+
+
+2. Calcule el coef. de correlación de Pearson e interpretar.
+
+
+3. Ajuste una regresión lineal a los datos e interprete los coeficientes $\hat{\beta}_i$ obtenidos.
+
+4. ¿Es un buen ajuste?
+
+5. Realice un análisis de los supuestos del modelo anterior
+
+- Normalidad: 
+
+- Homocedasticidad:
+
+- Autocorrelación/independencia:
+
+- Encuentre los valores atípicos e influentes
+
+
+6. Estimela duración de la siesta de una persona que bebió 498ml de vino. Además, establecer un intervalo de predicción al 90%.
+
+
+## Parte 2: Regresión Lineal Múltiple 
+
+Usaremos los datos `Fish market` extraidos de [kaggle](https://www.kaggle.com/aungpyaeap/fish-market) .
+
+- Specie   : species name of fish.
+- Weight   : weight of fish in Gram g.
+- Length1  : vertical length in cm.
+- Length2  : diagonal length in cm.
+- Length3  : cross length in cm .
+- Height   : height in cm.
+- Widht    : diagonal width in cm.
+
+```{r,message=FALSE}
+datafish <- readr::read_csv("Fish.csv")
+head(datafish,4)
+```
+
+
+#### Actividad:
+
+1. Realice un análisis exploratorio de las variables. Calcule la correlación y dispersión de la variable `Weight` con el resto de las variables. Comente.
+
+```{r}
+
+GGally::ggpairs(datafish,
+                diag = list(continuous = "barDiag"),
+                axisLabels = "none")
+
+```
+
+
+2. Ajuste un modelo de regresión lineal solo con las variables cuantitativas. Comente la variabilidad explicada e interprete los coeficientes estimados de las variables.
+
+```{r}
+#str(datafish)
+mod1 <- lm(Weight ~ . , data= datafish[-1])
+summary(mod1)
+
+mod2 <- lm(Weight ~ . , data= datafish[-c(1,4)])
+summary(mod2)
+
+mod3 <- lm(Weight ~ . , data= datafish[-c(1,4,7)])
+summary(mod3)
+
+
+```
+
+
+3. Ajuste un modelo de regresión lineal con la metodología *forward*. Comente.
+
+
+```{r}
+modelof <-  step(lm(Weight ~ 1 , data = datafish[-1]),scope = ~ Length1 + Length2 + Length3 + Height + Width,
+                direction = "forward" )
+summary(modelof)
+
+
+```
+
+
+4. Ajuste un modelo de regresión lineal con la metodología *backward*. Comente. 
+
+```{r}
+
+
+modstep1 <- step(lm(Weight  ~ .,data = datafish[-1]),direction = "backward")
+summary(modstep1)
+
+```
+```{r}
+
+modboth <- step(lm(Weight ~ ., data=datafish[-1]),
+                direction = "both")
+summary(modboth)
+
+```
+5. ¿Cuál de los modelos anteriores elegiría?
+
+Seleccionamos el modelo realizado en (2) o con la metodología backward dado que son el mismo y tiene una variabilidad explicada del 88.21%.
+
+6. Realice un análisis de los supuestos del modelo elegido en (5).
+```{r}
+par(mfrow=c(2,2))
+plot(modstep1)
+```
+
+
+- Normalidad: 
+```{r}
+ # mayor 0.5 se rechaza 
+ # p-value = 6.128e-05 se rechaza  el test normalidada
+lillie.test(modstep1$residuals)
+```
+
+
+- Homocedasticidad:
+```{r}
+library(lmtest)
+bptest(modstep1)
+# si es mayor a 0.5
+# se rechaza el test de homestacidad ya que  el valor  p-value = 4.477e-14 es mayor a 0.5
+```
+
+
+- Autocorrelación/independencia:
+```{r}
+
+library(lmtest) 
+dwtest(modstep1)
+#  se rechaza  cuando es mayor a 0.05 
+# se rechaza el test de independecia ya que el valor p-value < 2.2e-16 es mayor a 0.05
+```
+
+
+
+7. Determine los puntos influyentes y ajuste el modelo elegido anteriormente, ¿Aumenta la variabilidad explicada o disminuye? 
+```{r}
+library(car)
+#valores atípicos
+car::outlierTest(modstep1)
+# valores influyentes
+car::influencePlot(modstep1)
+```
+
+
+
+8. (**Extra**) Realice la actividad, ahora considerando también la variable cualitativa `Species`. ¿Hay cambios en el modelo elegido considerando esta variable?
+
+```{r}
+datos <- readr::read_csv("Fish.csv")
+str(datos)
+
+datos$Species <- factor(datos$Species)
+str(datos)
+
+
+GGally::ggpairs(datos,
+                diag = list(continuous = "barDiag"),
+                axisLabels = "none")
+
+model <- lm(Weight ~ . , data=datos)
+summary(model)
+
+
+model2 <- lm(Weight ~ . , data= datos[-c(5)])
+summary(model2)
+
+model3 <- lm(Weight ~ . , data= datos[-c(5,6,7)])
+summary(model3)
+
+
+# modelo backward Adjusted R-squared:  0.9319 
+modelof <- step(lm(Weight ~ 1, data=datos[-c(5,6,7)]),
+                scope = ~ Species + Length1 + Length2 ,
+                direction = "forward")
+summary(modelof)
+
+
+# modelo backward Adjusted R-squared:  0.9319 
+modelob <- step(lm(Weight ~ ., data=datos[-c(5,6,7)]),
+                direction = "backward")
+summary(modelob)
+
+
+# modelo both
+modelobb <- step(lm(Weight ~ ., data=datafish[-c(5,6,7)]),
+                direction = "both")
+summary(modelobb)
+
+
+```
+#Seleccionamos el modelo realizado en (2) o con la metodología backward dado que son el mismo y tiene una variabilidad explicada del 93.19%.
+
+```{r}
+par(mfrow=c(2,2))
+plot(modelob)
+
+#test normalidad 
+lillie.test(modelob$residuals)
+#si es mayor a 0.05 se re chaza 
+# se acepta el test de nomalidad debiado a que p-value = 0.0005375 es menor a 0.05
+
+#test homestacidad 
+bptest(modelob)
+#si es mayor a 0.05 se re chaza 
+#se rechaza el test de homestacidad ya que el valor p-value = 0.3788 es mayor a 0.05
+
+
+
+#test independecia 
+dwtest(modelob)
+# se rechaza el test de indeoendecia ya que el valor p-value = 5.527e-13 es mayor a 0.05
+
+# valores atípicos
+car::outlierTest(modelob)
+# valores influyentes
+car::influencePlot(modelob)
+
+```
+
+
+
+
+

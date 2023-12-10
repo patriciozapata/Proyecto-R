@@ -1,0 +1,78 @@
+---
+header-includes: 
+  - \usepackage{booktabs}
+  - \AtBeginDocument{\let\maketitle\relax}
+  - \usepackage[utf8]{inputenc}
+  - \usepackage[english]{babel}
+output:
+  pdf_document
+fontsize: 12pt 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE, 
+  message = FALSE,
+  digits  = 4
+)
+```
+
+\newcommand{\iid}{\overset{\mathrm{i.i.d}}{\sim}}
+\newcommand{\dados}{\ | \ }
+\newcommand{\bbeta}{\boldsymbol\beta}
+\newcommand{\R}{\mathbb{R}}
+\renewcommand{\labelitemi}{$\bullet$}
+\newtheorem{proof}{Solución}
+
+\begin{minipage}{2.5cm}
+			\includegraphics[width=1.8cm]{logouccolor.png}
+		\end{minipage}
+		\begin{minipage}{13 cm}
+			\begin{flushleft}
+   			     	\raggedright{
+   			     		\noindent
+   		 	    			{\sc Pontificia Universidad Católica de Chile \\ 
+   			     			Facultad de Matemáticas \\ 
+   			     			Departamento de Estad\'istica \sc \\
+   			     			\small Profesor: Danilo Álvares  - Ayudante: Rubén Soza
+   			     			}
+    			    	}
+			\end{flushleft}
+		\end{minipage}
+
+\begin{center} \quad \\[0.3cm]
+  {\Large Ayudantía Introducción al \\ Machine Learning} \\[0.3cm]
+  Diplomado DataScience UC \\[0.3cm]
+24 de Octubre 2020
+\end{center}
+
+
+```{r}
+# Librerías de Hoy
+library(tidyverse);library(factoextra); library(cluster)
+```
+
+
+## Modelos no supervisados en `R` y `Python`
+
+### Modelos para datos continuos.
+
+Cargue la base de datos `World.xlsx`, la cual contiene variables que describen a los países en diferentes ámbitos. 
+
+1. Realice una agrupación de los datos utilizando el algoritmo de $K$-means.
+2. Realice una agrupación de los datos utilizando un clustering jerárquico.
+3. Realice una reducción de dimension de los datos utilizando PCA.
+4. Realice una reducción de dimension de los datos utilizando Análisis Factorial.
+
+### Modelos para datos discretos
+
+Cargue la base de datos `mushrooms.csv`, la cual contiene información de 8124 tipos de hongos.
+
+1. Realice una agrupación de los datos utilizando el algoritmo de $K$-modes.
+2. Realice una agrupación de los datos utilizando un clustering jerárquico.
+
+
+
+
+
+

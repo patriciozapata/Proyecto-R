@@ -1,0 +1,75 @@
+library(rvest)
+library(robotstxt)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(purrr)
+library(readr)
+library(tidytext)
+library(topicmodels)
+library(ggplot2)
+
+
+get_robotstxt("https://www2.animeflv.to/")
+
+
+enlace_p1 <- read_html("https://www2.animeflv.to/")
+
+texto_titulares <- enlace_p1 %>% 
+  html_nodes("strong.Title") %>%  # seleciono solos los strong con la class title
+  html_text(trim = TRUE)
+
+
+enlace_titulares <- enlace_p1 %>% 
+  html_nodes("li > a.fa-play") %>% 
+  html_attr("href") 
+
+
+#enlace_titulares <- str_remove_all(enlace_titulares,"[:digit:]")
+
+enlace_titulares <- str_replace_all(enlace_titulares, "[:digit:]", "")
+
+enlace_titulares <-  substr(enlace_titulares, start = 0, stop = nchar(enlace_titulares) - 1 ) 
+
+enlace_titulares <-   gsub("ver/", "anime/", enlace_titulares) 
+
+tibble(titular = texto_titulares,
+       enlace_anime =  gsub("ver/", "anime/", enlace_titulares)  ) %>% 
+   mutate(enlace_anime = paste0("https://www2.animeflv.to", enlace_anime))
+  # separate(col = titular,
+  #          into = c("Titulo", "Descripcion"),
+  #          sep = "  ",
+  #          extra = "merge") 
+
+
+
+
+  
+  # texto_titulares <- html %>% 
+  #   html_nodes("strong.Title") %>%  # seleciono solos los strong con la class title
+  #   html_text(trim = TRUE)
+  # 
+  # 
+  # enlace_titulares <- html %>% 
+  #   html_nodes("li > a.fa-play") %>% 
+  #   html_attr("href") 
+  # 
+  # 
+  # #enlace_titulares <- str_remove_all(enlace_titulares,"[:digit:]")
+  # 
+  # enlace_titulares <- str_replace_all(enlace_titulares, "[:digit:]", "")
+  # 
+  # enlace_titulares <-  substr(enlace_titulares, start = 0, stop = nchar(enlace_titulares) - 1 ) 
+  # 
+  # tibble(titular = texto_titulares,
+  #        enlace_anime =  gsub("ver/", "anime/", enlace_titulares)  ) %>% 
+  #   mutate(enlace_anime = paste0("https://www2.animeflv.to", enlace_anime))
+  
+}
+
+
+
+obtener_titulares(enlace_titulares)
+
+
+

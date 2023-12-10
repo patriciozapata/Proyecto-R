@@ -1,0 +1,54 @@
+###############################
+## Parte 1: Regresión Lineal ##
+###############################
+library(readxl)
+pokemon <- read_excel("C:/Users/patri/OneDrive/Escritorio/TALLER EVALUADO 1HEF/REGRESIÓN LINEAL/pokemon.xlsx")
+
+
+#### Pregunta 1:
+## Haga un análisis exploratorio con las variables entregadas. Genere
+## gráficos de dispersión y calcule la correlación de las variables continuas 
+## con respecto a la variable attack
+
+str(pokemon$attack)
+
+
+#### Pregunta 2: ####
+##  Ajuste un modelo de regresión lineal todos los factores disponibles,
+## ¿Son todos estos significativos?, ¿Qué porcentaje de la variabilidad de 
+## ataque es explicada?, ¿Cómo interpretaría el factor speed?
+
+#### Pregunta 3 ####
+## Ajuste un modelo de regresión lineal con la metodología forward,
+## ¿Cuál es el factor más influyente? Hint: comando step().
+
+
+#### Pregunta 4: ####
+## Ajuste un modelo de regresión lineal con la metodología backward ,
+## ¿Es este modelo diferente al ajustado por la metodología forward?, ¿Cuál de
+## los 3 modelos ajustados utilizaría?
+
+
+#### Pregunta 5: ####
+## Con el modelo elegido, realice un estudio de los residuos con los
+## principales supuestos del modelo de regresión lineal. ¿Es un modelo
+## adecuado?
+
+#### Pregunta 6: ####
+## Realice una predicción de un Pokémon que tiene las siguientes 
+##características:
+
+# defense = 110
+# height_m = 3
+# hp = 80
+# sp_attack = 110
+# sp_defense = 75
+# speed = 120
+# weight_kg = 77
+# generation = 1
+# Is legendary = 0 (no es legendario)
+
+#### Pregunta 7 [BONUS 0.5 puntos]: ####
+## Realice un estudio de puntos influyentes y ajuste el modelo
+## con la metodología both sin estas observaciones. ¿Tiene mayor porcentaje 
+## de variabilidad explicada que los otros modelos?

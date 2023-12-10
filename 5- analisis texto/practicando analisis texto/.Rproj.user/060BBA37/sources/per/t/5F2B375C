@@ -1,0 +1,32 @@
+{
+    "id": "5F2B375C",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1605319828813.0,
+    "source_on_save": false,
+    "relative_order": 6,
+    "properties": {
+        "expression": "discurso_2020",
+        "caption": "discurso_2020",
+        "totalObservations": "1",
+        "displayedObservations": "1",
+        "variables": "1",
+        "cacheKey": "55ABDA3F",
+        "object": "discurso_2020",
+        "environment": "",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=discurso_2020&cache_key=55ABDA3F&max_cols=50",
+        "preview": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 0,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1605319828813,
+    "read_only": false,
+    "read_only_alternatives": []
+}

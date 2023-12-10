@@ -1,0 +1,32 @@
+{
+    "id": "608818AD",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1605053365866.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "expression": "noticias",
+        "caption": "noticias",
+        "totalObservations": "535",
+        "displayedObservations": "535",
+        "variables": "5",
+        "cacheKey": "0F2B61DA",
+        "object": "noticias",
+        "environment": "",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=noticias&cache_key=0F2B61DA&max_cols=50",
+        "preview": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 2597820396152,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1605053365866,
+    "read_only": false,
+    "read_only_alternatives": []
+}

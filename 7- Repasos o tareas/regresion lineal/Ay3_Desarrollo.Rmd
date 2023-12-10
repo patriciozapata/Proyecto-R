@@ -1,0 +1,103 @@
+---
+title: "Ayudantía 3  <br> Análisis de Regresión"
+author: "Nombre"
+date: "29 Agosto, 2020"
+output:
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: vignette
+    math: katex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#### Comenzaremos cargando las librerías necesarias:
+
+
+
+## Parte 1: Regresión Lineal Simple
+
+Consideremos los datos provistos en una encuesta donde se pregunto cuantos ml de vino bebió en el almuerzo y la duración de la siesta que tomó después. Los datos a utilizar:    `siesta.csv`
+
+```{r data, echo=TRUE, message=F}
+siesta <- readr::read_csv("siesta.csv")
+head(siesta,4)
+```
+
+#### Actividades:
+
+1. realice un gráfico de las variables:
+
+
+2. Calcule el coef. de correlación de Pearson e interpretar.
+
+
+3. Ajuste una regresión lineal a los datos e interprete los coeficientes $\hat{\beta}_i$ obtenidos.
+
+4. ¿Es un buen ajuste?
+
+5. Realice un análisis de los supuestos del modelo anterior
+
+- Normalidad: 
+
+- Homocedasticidad:
+
+- Autocorrelación/independencia:
+
+- Encuentre los valores atípicos e influentes
+
+
+6. Estimela duración de la siesta de una persona que bebió 498ml de vino. Además, establecer un intervalo de predicción al 90%.
+
+
+## Parte 2: Regresión Lineal Múltiple 
+
+Usaremos los datos `Fish market` extraidos de [kaggle](https://www.kaggle.com/aungpyaeap/fish-market) .
+
+- Specie   : species name of fish.
+- Weight   : weight of fish in Gram g.
+- Length1  : vertical length in cm.
+- Length2  : diagonal length in cm.
+- Length3  : cross length in cm .
+- Height   : height in cm.
+- Widht    : diagonal width in cm.
+
+```{r,message=FALSE}
+datafish <- readr::read_csv("Fish.csv")
+head(datafish,4)
+```
+
+
+#### Actividad:
+
+1. Realice un análisis exploratorio de las variables. Calcule la correlación y dispersión de la variable `Weight` con el resto de las variables. Comente.
+
+2. Ajuste un modelo de regresión lineal solo con las variables cuantitativas. Comente la variabilidad explicada e interprete los coeficientes estimados de las variables.
+
+3. Ajuste un modelo de regresión lineal con la metodología *forward*. Comente.
+
+
+4. Ajuste un modelo de regresión lineal con la metodología *backward*. Comente. 
+
+5. ¿Cuál de los modelos anteriores elegiría?
+
+6. Realice un análisis de los supuestos del modelo elegido en (5).
+
+- Normalidad: 
+
+- Homocedasticidad:
+
+- Autocorrelación/independencia:
+
+
+7. Determine los puntos influyentes y ajuste el modelo elegido anteriormente, ¿Aumenta la variabilidad explicada o disminuye? 
+
+8. (**Extra**) Realice la actividad, ahora considerando también la variable cualitativa `Species`. ¿Hay cambios en el modelo elegido considerando esta variable?
+
+
+
+
+

@@ -1,0 +1,32 @@
+{
+    "id": "0D882856",
+    "path": null,
+    "project_path": null,
+    "type": "r_dataframe",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1597877247861.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "expression": "pokemon",
+        "caption": "pokemon",
+        "totalObservations": "611",
+        "displayedObservations": "611",
+        "variables": "10",
+        "cacheKey": "07FE9AB7",
+        "object": "pokemon",
+        "environment": "",
+        "contentUrl": "grid_resource/gridviewer.html?env=&obj=pokemon&cache_key=07FE9AB7&max_cols=50",
+        "preview": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 2318575493155089765,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1597877247861,
+    "read_only": false,
+    "read_only_alternatives": []
+}

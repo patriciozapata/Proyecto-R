@@ -1,0 +1,140 @@
+
+
+library(tidyverse)
+data <- readxl::read_excel("PlayStore.xlsx")
+
+#Selecciones los datos orde4nados por tamaño 
+#y filtrados por tipo, 
+#ademas de relizar una columna  de medicino  llamada ganancias, primero debes remplazar text  
+#y depues descarga   por precio
+
+# #Selecciones los datos orde4nados por tamaño  ---------------------------
+
+
+data2 <- data %>% 
+  dplyr::arrange(`Tamaño(M)`) %>% 
+  dplyr::filter(Tipo == "Pago") %>% 
+  dplyr::mutate(Descargas = gsub("aprox.", "", Descargas),
+                Descargas = gsub(",", "", Descargas),
+                Ganancias = as.numeric(Descargas)*Precio)
+
+
+#utiliza la columna ya creada y genera un promedio por categoria 
+Ganancias_Promedio <- data2 %>% 
+  dplyr::group_by(`Categoría`) %>% 
+  dplyr::summarise(Ganancias = round(mean(Ganancias, na.rm = TRUE), 0))
+
+
+# liberia datatables para visualizar los datos 
+DT::datatable(Ganancias_Promedio)
+
+
+
+
+# Entregue un gráfico que represente la distribución de la VALORAC --------
+
+ggplot(data = data, aes(x = `Valoración`)) +
+  geom_histogram(bins = 50, alpha = 0.8, color = "white", fill = "turquoise") +
+  xlab("Valoración") +
+  ylab("Frecuencias") +
+  ggtitle("Distribución de Valoración") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#?aes
+
+#fill se utiliza para entregar los colores segun la columna
+ggplot(data = data, aes(x = `Categoría`, y = `Valoración`, fill = `Categoría`)) +
+  geom_boxplot() +
+  coord_flip()+
+  theme(legend.position="none")
+
+
+
+ggplot(data = data, aes(y = `Valoración`, x = factor(Tipo),  fill = factor(Tipo)))+
+  geom_boxplot() + 
+  xlab("Tipo de adquisición")
+
+
+### Para quitar los Outliers:
+ggplot(data = data, aes(y = `Valoración`, fill = factor(Tipo))) +
+  geom_boxplot(outlier.shape = NA) 
+
+
+
+
+
+Orden <- c("Todo público", "Mayores de 10 años", "Adolescentes",
+           "Mayores de 17 años", "Sólo adultos", "Sin clasificación")
+
+
+data <- data %>% 
+  dplyr::mutate(Clasificacion2 = factor(`Clasificación`, levels = Orden))
+
+ggplot(data, aes(x = Clasificacion2, fill = Clasificacion2)) +
+  geom_bar() +
+  coord_flip() +
+  theme(legend.position = "none") +
+  ylab("Cuenta") +
+  xlab("Clasificación") +
+  ggtitle("Distribución de Clasificación") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+
+
+
+Analisis_Categoria <- function(categoria) {
+  datos <- data %>% 
+    dplyr::filter(`Categoría` == categoria)
+  
+  g1 <- ggplot(data = datos, aes(x = `Valoración`)) +
+    geom_histogram(bins = 30, color = "white", fill = "turquoise") +
+    xlab("Valoración") + ylab("Frecuencias") +
+    ggtitle(paste("Distribución de Valoración de la Categoría", categoria)) +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  tabla <- as.data.frame(round(as.matrix(summary(data$`Tamaño(M)`)), 2))
+  names(tabla) <- "Valor"
+  print(g1)
+  return(tabla)
+}
+
+knitr::kable(Analisis_Categoria("SOCIAL"))
+
+
+
+
+buscador_palabra <- function(palabra) {
+  indice <- grep(palabra, data$App)
+  tabla <- data %>% 
+    dplyr::slice(indice) %>% 
+    dplyr::count(Clasificacion2) %>% 
+    dplyr::rename(Clasificacion = Clasificacion2,
+                  Numero = n)
+  return(tabla)
+}
+
+knitr::kable(buscador_palabra("adult"))
+
+
+
+
+
+promedio <- mean(data$Valoración, na.rm = TRUE)
+desviacion <- sd(data$Valoración, na.rm = TRUE)
+
+datos <- data.frame(Simulacion = rnorm(9000, promedio, desviacion))
+#?rnorm
+ggplot(data = datos, aes(x = Simulacion)) +
+  geom_histogram(bins = 50, color = "white", fill = "turquoise") +
+  xlab("Valoracion Normal") + ylab("Distribucion") +
+  ggtitle("Distribución de Valoración Normal") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(data = data, aes(x = `Valoración`)) +
+  geom_histogram(bins = 50, color = "white", fill = "turquoise") +
+  xlab("Valoracion") + ylab("Distribucion") +
+  ggtitle("Distribución de Valoración") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+

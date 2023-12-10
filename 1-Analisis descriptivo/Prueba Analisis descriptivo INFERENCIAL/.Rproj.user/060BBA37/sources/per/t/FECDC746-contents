@@ -1,0 +1,475 @@
+library(readxl)
+library(tidyverse)
+#install.packages("PASWR")
+#install.packages("ggpubr")
+library(ggcharts)
+library(PASWR)
+library(kableExtra)
+library(Publish)
+library(ggplot2)
+
+library(ggpubr)
+
+# analisis exploratorio
+TCM2020 <- read_excel("TCM2020.xlsx")
+str(TCM2020)
+
+# definiendo variables
+df <- TCM2020 %>%  dplyr::select(Cliente, 
+                Edad,
+                Sex,
+                Reg,
+                Uso2019,
+                UsoMayo,
+                MontoMayo,
+                MontoAcum)
+
+# ver como queda
+str(df)
+# agregando columnas 
+datos <-  df %>%  
+       mutate(sex_n = case_when( df$Sex==1 ~ "Femenino", df$Sex==0 ~ "Masculino")) %>%  # sexc = IF(Hoja1[Sex(1=Fem)] =1 ,"Femenino","Masculino")
+       mutate(reg_n = case_when( df$Reg==1 ~ "RM", df$Reg==0 ~ "Otras")) %>% 
+       mutate(id_n = case_when( df$Cliente < 250000 ~ "antes enero 2010", df$Cliente > 250000 ~"nuevas")) %>% 
+       mutate(edad_n = case_when( df$Edad >= 55  ~ "MAYORES O IGUAL 55" ,df$Edad <=35  ~ "MENORES O IGUAL A 35" , df$Edad <=54 ||   df$Edad >=36 ~ "ENTRE 36 A 54")) %>% 
+       mutate(orderby = case_when( df$Edad >= 55  ~ 3 ,df$Edad <=35  ~ 2, df$Edad <=54 ||   df$Edad >=36 ~ 1) , orderby = as.numeric(orderby)) %>% 
+       arrange(desc(orderby))
+view(datos)
+
+
+# revision
+head(datos)
+view(datos)
+str(datos)
+summary(datos)
+
+# analisis discreptivo
+# Resumen de los datos
+#Valores Centrales 
+summary(datos$Cliente)
+summary(datos$Edad)
+summary(datos$MontoMayo)
+summary(datos$MontoAcum)
+
+EDA(datos$Cliente)
+EDA(datos$Edad)
+EDA(datos$MontoMayo)
+EDA(datos$MontoAcum)
+
+
+prop.table(table(datos$edad_n ,datos$sex_n ), margin = 1)
+
+prop.table(table(datos$reg_n ,datos$sex_n ), margin = 1) 
+
+prop.table(table(datos$edad_n ,datos$id_n ), margin = 1) 
+
+
+
+# 1 
+# Bajo uso: dado que hasta mayo 2018 el 62% utilizó la tarjeta al menos una
+# vez, y ahora (hasta mayo 2019) se cree que ese porcentaje ha bajado
+# significativamente.
+#H0: El uso por primera vez es igual o superior al 0.62
+#H1: El uso por primera vez de la tarjeta es inferior al 0.62
+# Se rechaza 
+
+test <- prop.test(sum(datos$Uso2019), nrow(datos), p = 0.62, alternative = "less")
+test
+
+ci.mean(datos$Uso2019 ==1, alpha = 0.05, normal = FALSE)
+#El comando nos dice que el promedio de la muestra es de 0.58, y el intervalo donde podría estar el real promedio sería entre [0.54;0.63] con 95% de confianza.
+mean(datos$Uso2019, na.rm = TRUE)
+tabla1 <-  data.frame(prop.table(table(datos$Uso2019)))
+
+
+
+hist_1 <-  barplot(prop.table(table(datos$Uso2019)),xlab="",beside=FALSE,legend.text=c('No Uso','Uso2019'),col=c('5','2'),main='Uso de tarjeta 2019' ,ylab='Porcentaje',axisname=FALSE)
+axis(1,labels=c("No Uso", "Uso"), at=hist_1)
+axis(2,at=seq(0,100,by=10))
+text(hist_1, 0, round(tabla1$Freq, 2),cex=1,pos=3) 
+
+#El promedio real es de 0.58 y si esta dentro del intervalo de confianza de la muestra.
+#El porcentaje  decrecido  un 0.04 esto  referente bajo uso de la tarjeta en el 2019
+
+
+# 2 
+# Montos: El comité de promociones discute que ellos han focalizado
+# apropiadamente las ofertas, de tal forma que han incrementado los montos
+# de compras mensuales, y para comprobar indican que en Mayo2018 fue de
+# m$400, aseguran que este mes fue superior.
+# H0: las compras medias fueron iguales o menores a M$400  
+# H1: Las compras medias en mayo 2019 fueron mayores a M$400
+
+pregunta_2 <- datos %>% 
+  filter(MontoMayo >0)
+
+t.test(pregunta_2 $MontoMayo, mu = 400, alternative = "greater")
+
+
+
+ci.mean(pregunta_2$MontoMayo, alpha = 0.05, normal = FALSE)
+#El comando nos dice que el promedio de la muestra es de 449.30, y el intervalo donde podría estar el real promedio sería entre [418.45;480.15] con 95% de confianza.
+mean(pregunta_2$MontoMayo)
+Diferencia_2 <-  mean(pregunta_2$MontoMayo)-400
+Diferencia_2
+# EL COMITE   TIENE RAZON CON EL INCREMENTO DE LAS COMPRAS CON RESSCPETO A MAYO DEL AÑO ANTERIOR 2018  #[1] 449.3036
+#Con un 95% de confianza, podemos decir que hubo mayor venta en mayo2019 teniendo ventas medias de 449M con una diferencia de 49M del año anterior equivalente 12%.
+
+
+
+
+
+# 3
+# Antiguos: El área de fidelización de clientes (renegociación) es acusada de
+# impedir que antiguos clientes incrementen sus compras al limitar sus niveles
+# de endeudamiento. En otras palabras, entre los que usan la tarjeta, los
+# clientes antiguos tiene montos medios M$100 inferiores a los clientes nuevos
+# (las tarjetas NumCliente < 250.000 fueron emitidas antes de enero2010 à
+#   antiguos).
+
+preg_3 <-  prop.table(table(datos$id_n)) 
+
+pie(preg_3, labels = preg_3, main = "Proporcion Por tarjetas antigua y nuevas",col = rainbow(length(preg_3)))
+legend("topright", c("antes enero 2010","nuevas"), cex = 0.8,
+       fill = rainbow(length(preg_3)))
+
+
+pregunta_3 <- datos %>% 
+  filter(id_n =="antes enero 2010" ,   Uso2019 == "1")
+
+# Clientes Antiguos
+#Test de hipótesis. 
+#H0: medias iguales 
+#H1: medias distintas
+
+t.test(pregunta_3$MontoAcum, mu = 400, alternative = "greater")
+
+ci.mean(pregunta_3$MontoAcum, alpha = 0.05, normal = FALSE)
+
+x <-  mean(pregunta_3$MontoAcum)
+
+
+
+
+# Clientes nuevos
+#Test de hipótesis. 
+
+
+pregunta_3_1 <- datos %>% 
+  filter(id_n =="nuevas",   Uso2019 == "1")
+
+
+t.test(pregunta_3_1$MontoAcum, mu = 400, alternative = "greater")
+
+
+ci.mean(pregunta_3_1$MontoAcum, alpha = 0.05, normal = FALSE)
+
+
+y <- mean(pregunta_3_1$MontoAcum)
+
+
+
+mi_df <- data.frame(
+ 
+  "Promedio" = as.numeric(c(x, y)),
+  "Categoria" = as.numeric(c(1,0))
+)
+
+
+
+# Diferencia de montos
+Diferencia_3 <- mean(pregunta_3_1$MontoAcum)-mean(pregunta_3$MontoAcum) 
+Diferencia_3
+
+#H0: medias iguales 
+#H1: medias distintas
+t.test(mi_df$Promedio ,mi_df$Categoria, alternative = "two.sided") 
+# p-value = 0.03448 se rechaza H1 , Las medias son iguales por ende no afectarla el endeudamiento entre clientes antiguos y nuevos.
+
+
+
+
+# 4 
+# Atributos: Marketing le solicita determinar si la edad (grupo <=35 años, 36-54 y > 55), sexo
+# o región (recién el año 2006 empezó la apertura de locales en regiones, y hoy tenemos
+#           locales en todas las regiones) son atributos que deben considerarse relevantes. Es decir,
+# ¿tienen comportamiento distinto en la frecuencia de uso o montos transados?
+
+
+
+# categoria edad ----------------------------------------------------------
+
+universo_4 <- datos[c(7,8,12,13)]
+
+pregunta_freq_uso_2019 <-  datos %>%  
+         group_by(edad_n) %>% 
+         count(Uso2019) %>% 
+         filter(Uso2019 !=0 )
+
+
+
+pregunta_freq_UsoMayo <-  datos %>%  
+  group_by(edad_n) %>% 
+  count(UsoMayo) %>% 
+  filter( UsoMayo !=0)
+
+
+
+unidos <-  full_join(pregunta_freq_uso_2019,pregunta_freq_UsoMayo,by="edad_n")
+
+
+pregunta_monto_MontoAcum <-   datos[c(7,8,12,13)] %>%  
+                          group_by(edad_n)  %>% 
+                          summarise(MontoAcum = sum(MontoAcum),MontoMayo  = sum(MontoMayo )) %>% 
+                           filter(MontoAcum !=0, MontoMayo !=0 ) 
+
+
+pregunta_monto_mean <-   datos[c(7,8,12)] %>%  
+  group_by(edad_n)  %>% 
+  summarise(MontoAcum = mean(MontoAcum),MontoMayo  = mean(MontoMayo )) %>% 
+  filter(MontoAcum !=0, MontoMayo !=0 ) 
+              
+pregunta_monto_mean =  rename(pregunta_monto_mean, "Categoria"  = edad_n , "Mean Acum 2019 Enero - Mayo"=MontoAcum ,"Mean Mayo"= MontoMayo)
+
+
+unidos_2 <-  full_join(unidos,pregunta_monto_MontoAcum,by="edad_n")
+
+final <- unidos_2[c(1,3,6,5,7)]
+
+final_categoria_edad =  rename(final, "Categoria"  = edad_n , "Freq Uso enero a Mayo 2019" = n.x, "Monto Acum 2019 Enero - Mayo"=MontoAcum , "Freq Mayo"=  n.y ,"Monto Mayo"= MontoMayo)
+
+unidos_edad <-  full_join(pregunta_monto_mean,final_categoria_edad,by="Categoria")
+
+unidos_edad <-   unidos_edad[c(1,4,5,2,6,7,3)]
+
+unidos_edad
+                               
+
+# analsiis  de categoria edaddes entre enero y mayo 2019
+#se puede apreciar que la frecuencia la mayor frecuencia de uso es entre 36 a 53 años. pero los montos promedios se puede ver que los menores de 35 años o = a 35 tiene una mayor gastos  vs las demas edades.
+
+#analisis de castegoria por edad en mayo
+#se puede apreciar que nuemnanete la frecuencia de uso esta entre 36 a 54 años, ademas se repite el promedio mayor de gasto en la edad de menores o ifguales a 35 años.
+
+              
+
+
+
+# categoria por region ----------------------------------------------------
+pregunta_freq_uso_2019_region <-  datos %>%  
+  group_by(reg_n) %>% 
+  count(Uso2019) %>% 
+  filter(Uso2019 !=0 )
+
+
+pregunta_freq_UsoMayo_region <-  datos %>%  
+  group_by(reg_n) %>% 
+  count(UsoMayo) %>% 
+  filter( UsoMayo !=0)
+
+
+unidos_reg <-  full_join(pregunta_freq_uso_2019_region,pregunta_freq_UsoMayo_region,by="reg_n")
+
+pregunta_monto_MontoAcum_reg_n <-   datos %>%  
+  group_by(reg_n)  %>% 
+  summarise(MontoAcum = sum(MontoAcum),MontoMayo  = sum(MontoMayo )) %>% 
+  filter(MontoAcum !=0, MontoMayo !=0 )
+ 
+
+pregunta_mean_reg_n <-   datos %>%  
+  group_by(reg_n)  %>% 
+  summarise(MontoAcum = mean(MontoAcum),MontoMayo  = mean(MontoMayo )) %>% 
+  filter(MontoAcum !=0, MontoMayo !=0 )
+
+
+pregunta_mean_reg_n =  rename(pregunta_mean_reg_n, "Region"  = reg_n , "Mean Acum 2019 Enero - Mayo"=MontoAcum  ,"Mean Mayo"= MontoMayo)
+
+datos_regiones <-  full_join(unidos_reg,pregunta_monto_MontoAcum_reg_n,by="reg_n")
+
+
+
+final_region <- datos_regiones[c(1,3,6,5,7)]
+
+
+final_region =  rename(final_region, "Region"  = reg_n , "Freq Uso enero a Mayo 2019" = n.x, "Monto Acum 2019 Enero - Mayo"=MontoAcum , "Freq Mayo"=  n.y ,"Monto Mayo"= MontoMayo)
+
+unidos_reg_resumen <-  full_join(final_region,pregunta_mean_reg_n,by="Region")
+
+tabla_resumen_region <- unidos_reg_resumen[c(1,2,3,6,4,5,7)]
+
+tabla_resumen_region
+
+#analisi acumulado de regiones entre enero a mayo 2019
+#se puede apreciar que en otras regiones se tiene una mayor frequiencia de uso de la tarjeta y ademas tiene un promedio mayor de monto 709 OTRAS. vs 699 de RM.
+
+#analisis de regiones en mayo
+# se puede apreciar que nuevamente la tarjtea tyiene mayor frequencia de uso en otras regiones, por otro lado el monto promedio en mayo es mayor en la region metropolitana  con 175 vs 162 de otras.
+
+
+# categoria por sexo ----------------------------------------------------
+
+uso_por_Sexo_mean <-  datos[c(9,7,8)] %>% 
+  group_by(sex_n )  %>% 
+  summarise( MontoAcum = mean(MontoAcum),MontoMayo  = mean(MontoMayo)) %>% 
+  filter(MontoAcum !=0, MontoMayo !=0 )
+
+final_sexo_mean =  rename(uso_por_Sexo_mean, "Mean MontoAcum " = MontoAcum , "Mean MontoMayo"=MontoMayo)
+
+uso_por_Sexo <-  datos[c(9,5,6,7,8)] %>% 
+               group_by(sex_n )  %>% 
+               summarise(Uso2019  = sum(Uso2019 ),UsoMayo  = sum(UsoMayo ),MontoAcum = sum(MontoAcum),MontoMayo  = sum(MontoMayo)) %>% 
+               filter(MontoAcum !=0, MontoMayo !=0,Uso2019!=0,UsoMayo!=0 )
+
+final_sexo =  rename(uso_por_Sexo, "Freq Uso enero a Mayo 2019 genero" = Uso2019 , "Freq en  Mayo por genero"=UsoMayo , "Monto Mayo"=  MontoAcum ,"Monto Acum 2019 Enero - Mayo"= MontoMayo)
+
+  
+unidos_sex_resumen <-  full_join(final_sexo_mean,final_sexo,by="sex_n")
+
+tabla_sex_resumen <- unidos_sex_resumen[c(1, 4,7,2,5,6,3)]
+
+
+
+tabla_sex_resumen <-  data.frame(tabla_sex_resumen)
+
+# analisis monto acumulado
+#se puede apreciar que sexo masculino tiene una mayor frecuencia de uso de tarjeta entre entero a mayo 2019.
+#ademas se puede apreciar que las mujeres en promedio tiende a gastar mas dinero. 
+
+#analisis solo mayo
+#nuevamente se puede apreciar que los hombre usan mas la tarjeta en mayo.
+# y en promedio las mujeres gastan mas que los hombre.
+
+
+
+#edad, sexo
+#edad,region
+#¿tienen comportamiento distinto en la frecuencia de uso o montos transados?
+
+
+perfectiva_ultima <-  datos %>% 
+                      group_by( edad_n,sex_n) %>% 
+                      summarise(MontoAcum = sum(MontoMayo ),MontoMayo  = sum(MontoAcum ))
+
+                      
+
+#Otras
+# analisis  femenino  y masculino de otras regiones
+#-----
+# el valor mas alto entre estos datos.
+# freq:
+# media:
+# acumulado ennero a mayo 2019:
+# acumulado mayo 2019:
+
+
+perfectiva_femenino <-  
+datos %>% 
+group_by( reg_n,edad_n,sex_n) %>% 
+summarise(MontoAcum_mean  = mean(MontoAcum ),MontoMayo_mean  = mean(MontoMayo ),Uso2019  = sum(Uso2019 ),MontoAcum  = sum(MontoAcum ),UsoMayo  = sum(UsoMayo ),MontoMayo  = sum(MontoMayo ))  %>% 
+filter( reg_n=="Otras" , sex_n =="Femenino") 
+
+perfectiva_femenino
+
+
+
+
+
+perfectiva_masculino <-  
+  datos %>% 
+  group_by( reg_n,edad_n,sex_n) %>% 
+  summarise(MontoAcum_mean  = mean(MontoAcum ),MontoMayo_mean  = mean(MontoMayo ),Uso2019  = sum(Uso2019 ),MontoAcum  = sum(MontoAcum ),UsoMayo  = sum(UsoMayo ),MontoMayo  = sum(MontoMayo ))  %>% 
+  filter(reg_n=="Otras",sex_n =="Masculino" )   
+  
+
+perfectiva_masculino
+
+
+
+
+# uso de tarjeta UsoMayo por edad segun la region
+hist_1 <-  
+barplot(perfectiva_femenino$UsoMayo,
+        xlab="Rango de edad",
+legend.text=perfectiva_femenino$edad_n,
+col=c('5','2',55),
+main='uso de tarjeta Mayo por edad Femenino' ,
+ylab='Cantidad',
+
+names.arg=perfectiva_femenino$edad_n)
+
+text(hist_1,
+0,
+round(perfectiva_femenino$UsoMayo, 3),cex=1,pos=3) 
+# Tiene mayor cantidad de uso entre la edad de  36 a 54, 22 veces  en mayo 2019.
+
+hist_2 <- 
+barplot(perfectiva_masculino$UsoMayo,
+xlab="Rango de edad",
+legend.text=perfectiva_masculino$edad_n,
+col=c('5','2',55),
+main='uso de tarjeta Mayo por edad Masculino' ,
+ylab='Cantidad',
+
+names.arg=perfectiva_masculino$edad_n)
+
+text(hist_1,
+0,
+round(perfectiva_masculino$UsoMayo, 3),cex=1,pos=3) 
+# Tiene mayor cantidad de uso entre la edad de  36 a 54, 26 veces  en enero a mayo 2019.
+
+
+
+
+# uso de tarjeta Uso2019 por edad segun la region
+hist_1 <-  
+  barplot(perfectiva_femenino$Uso2019,
+          xlab="Rango de edad",
+          legend.text=perfectiva_femenino$edad_n,
+          col=c('5','2',55),
+          main='uso de tarjeta Mayo por edad Femenino' ,
+          ylab='Cantidad',
+          
+          names.arg=perfectiva_femenino$edad_n)
+
+text(hist_1,
+     0,
+     round(perfectiva_femenino$Uso2019, 3),cex=1,pos=3) 
+# Tiene mayor cantidad de uso entre la edad de  36 a 54, 32 veces  en mayo 2019.
+
+hist_2 <- 
+  barplot(perfectiva_masculino$Uso2019,
+          xlab="Rango de edad",
+          legend.text=perfectiva_masculino$edad_n,
+          col=c('5','2',55),
+          main='uso de tarjeta Mayo por edad Masculino' ,
+          ylab='Cantidad',
+          
+          names.arg=perfectiva_masculino$edad_n)
+
+text(hist_1,
+     0,
+     round(perfectiva_masculino$Uso2019, 3),cex=1,pos=3) 
+# Tiene mayor cantidad de uso entre la edad de  36 a 54, 45 veces  en enero a mayo 2019.
+
+
+
+
+                   
+#RM
+# analisis  femenino  y masculino de otras RM
+
+perfectiva_femenino_2 <-  
+  datos %>% 
+  group_by( reg_n,edad_n,sex_n) %>% 
+  summarise(MontoAcum_mean  = mean(MontoAcum ),MontoMayo_mean  = mean(MontoMayo ),Uso2019  = sum(Uso2019 ),MontoAcum  = sum(MontoAcum ),UsoMayo  = sum(UsoMayo ),MontoMayo  = sum(MontoMayo ))  %>% 
+  filter( reg_n=="RM",sex_n =="Femenino" ) 
+
+
+perfectiva_masculino_2 <-  
+  datos %>% 
+  group_by( reg_n,edad_n,sex_n) %>% 
+  summarise(MontoAcum_mean  = mean(MontoAcum ),MontoMayo_mean  = mean(MontoMayo ),Uso2019  = sum(Uso2019 ),MontoAcum  = sum(MontoAcum ),UsoMayo  = sum(UsoMayo ),MontoMayo  = sum(MontoMayo ))  %>% 
+  filter( reg_n=="RM",sex_n =="Masculino" ) 
+
+
+                
